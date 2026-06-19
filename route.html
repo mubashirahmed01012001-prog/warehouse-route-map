@@ -6,7 +6,8 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <style>
   html, body { margin: 0; padding: 0; height: 100%; }
-  #map { height: 100vh; width: 100%; cursor: pointer; }
+  #map-link { display: block; height: 100vh; width: 100%; cursor: pointer; }
+  #map { height: 100%; width: 100%; pointer-events: none; }
   #info {
     position: absolute;
     top: 10px;
@@ -27,7 +28,9 @@
 </head>
 <body>
 <div id="info">Loading route...</div>
-<div id="map"></div>
+<a id="map-link" href="#" target="_blank" rel="noopener">
+  <div id="map"></div>
+</a>
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
 const params = new URLSearchParams(window.location.search);
@@ -36,6 +39,10 @@ const toParts = params.get('to').split(',').map(Number);
 const fromLat = fromParts[0], fromLng = fromParts[1];
 const toLat = toParts[0], toLng = toParts[1];
 
+// Set the link's destination to Google Maps directions
+document.getElementById('map-link').href =
+  `https://www.google.com/maps/dir/?api=1&origin=${fromLat},${fromLng}&destination=${toLat},${toLng}&travelmode=driving`;
+
 const map = L.map('map').setView([fromLat, fromLng], 10);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors'
@@ -43,14 +50,6 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 L.marker([fromLat, fromLng]).addTo(map).bindPopup('Origin');
 L.marker([toLat, toLng]).addTo(map).bindPopup('Destination');
-
-// Click anywhere on the map to open full Google Maps directions in a new tab
-map.on('click', function() {
-  window.open(
-    `https://www.google.com/maps/dir/?api=1&origin=${fromLat},${fromLng}&destination=${toLat},${toLng}&travelmode=driving`,
-    '_blank'
-  );
-});
 
 fetch(`https://router.project-osrm.org/route/v1/driving/${fromLng},${fromLat};${toLng},${toLat}?overview=full&geometries=geojson`)
   .then(r => r.json())
