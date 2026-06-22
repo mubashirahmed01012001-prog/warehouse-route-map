@@ -1,45 +1,55 @@
 <!DOCTYPE html>
+
 <html>
+
 <head>
+
 <meta charset="utf-8">
+
 <title>Route Map</title>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
 <style>
+
   html, body { margin: 0; padding: 0; height: 100%; }
 
-  #map-link {
-    display: block;
-    height: 100vh;
-    width: 100%;
-    cursor: pointer;
-  }
+  #map-link { display: block; height: 100vh; width: 100%; cursor: pointer; }
 
-  #map {
-    height: 100%;
-    width: 100%;
-    pointer-events: none;
-  }
+  #map { height: 100%; width: 100%; pointer-events: none; }
 
   #info {
+
     position: absolute;
+
     top: 10px;
+
     left: 50px;
+
     z-index: 999;
+
     background: white;
-    padding: 10px 14px;
+
+    padding: 6px 12px;
+
     border-radius: 6px;
+
     font-family: sans-serif;
+
     font-size: 14px;
+
     box-shadow: 0 1px 4px rgba(0,0,0,0.3);
-    line-height: 1.4;
+
   }
 
   .leaflet-control-attribution {
+
     font-size: 9px;
+
     opacity: 0.6;
+
   }
+
 </style>
 
 </head>
@@ -49,91 +59,81 @@
 <div id="info">Loading route...</div>
 
 <a id="map-link" href="#" target="_blank" rel="noopener">
+
   <div id="map"></div>
+
 </a>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
+
 const params = new URLSearchParams(window.location.search);
 
-const from = params.get('from');
-const to = params.get('to');
+const fromParts = params.get('from').split(',').map(Number);
 
-if (!from || !to) {
-  document.getElementById('info').innerText = "Missing FROM / TO coordinates";
-  throw new Error("Missing coordinates");
-}
-
-const fromParts = from.split(',').map(Number);
-const toParts = to.split(',').map(Number);
+const toParts = params.get('to').split(',').map(Number);
 
 const fromLat = fromParts[0], fromLng = fromParts[1];
+
 const toLat = toParts[0], toLng = toParts[1];
 
-// Google Maps direction link
+// Set the link's destination to Google Maps directions
+
 document.getElementById('map-link').href =
+
   `https://www.google.com/maps/dir/?api=1&origin=${fromLat},${fromLng}&destination=${toLat},${toLng}&travelmode=driving`;
 
-// Initialize map
 const map = L.map('map').setView([fromLat, fromLng], 10);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+
   attribution: '&copy; OpenStreetMap contributors'
+
 }).addTo(map);
 
-// Icons
-const truckIcon = L.icon({
-  iconUrl: "https://cdn-icons-png.flaticon.com/512/1995/1995481.png",
-  iconSize: [40, 40],
-  iconAnchor: [20, 20]
-});
+L.marker([fromLat, fromLng]).addTo(map).bindPopup('Origin');
 
-const destinationIcon = L.icon({
-  iconUrl: "https://cdn-icons-png.flaticon.com/512/484/484167.png",
-  iconSize: [35, 35],
-  iconAnchor: [17, 17]
-});
+L.marker([toLat, toLng]).addTo(map).bindPopup('Destination');
 
-// Markers
-L.marker([fromLat, fromLng], { icon: truckIcon })
-  .addTo(map)
-  .bindTooltip("FROM", { permanent: true, direction: "top" });
-
-L.marker([toLat, toLng], { icon: destinationIcon })
-  .addTo(map)
-  .bindTooltip("TO", { permanent: true, direction: "top" });
-
-// Route API (OSRM)
 fetch(`https://router.project-osrm.org/route/v1/driving/${fromLng},${fromLat};${toLng},${toLat}?overview=full&geometries=geojson`)
+
   .then(r => r.json())
+
   .then(data => {
 
     const route = data.routes[0];
 
     const coords = route.geometry.coordinates.map(c => [c[1], c[0]]);
 
-    const line = L.polyline(coords, { color: 'blue', weight: 5 }).addTo(map);
+    const line = L.polyline(coords, {color: 'blue', weight: 5}).addTo(map);
 
     map.fitBounds(line.getBounds());
 
     const mins = Math.round(route.duration / 60);
+
     const km = (route.distance / 1000).toFixed(1);
 
-    const fromText = `${fromLat.toFixed(4)}, ${fromLng.toFixed(4)}`;
-    const toText = `${toLat.toFixed(4)}, ${toLng.toFixed(4)}`;
+    document.getElementById('info').innerText = `${km} km · ~${mins} min`;
 
-    document.getElementById('info').innerHTML =
-      `<b>🚚 FROM:</b> ${fromText}<br>` +
-      `<b>📍 TO:</b> ${toText}<br>` +
-      `<b>⏱️</b> ${km} km · ~${mins} min`;
   })
+
   .catch(err => {
+
     document.getElementById('info').innerText = 'Could not load route.';
+
     console.error(err);
+
   });
 
 </script>
 
 </body>
+
 </html>
+
+
+
+see this is my perfectly working htlm file
+
+is there anyway i can add truck icon like im having minutes and distance. and if i can show locations like to and from?
