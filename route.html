@@ -59,9 +59,9 @@ fetch(`https://router.project-osrm.org/route/v1/driving/${fromLng},${fromLat};${
     const line = L.polyline(coords, {color: 'blue', weight: 5}).addTo(map);
     map.fitBounds(line.getBounds());
 
-    const mins = Math.round(route.duration / 60);
-    const km = (route.distance / 1000).toFixed(1);
-    document.getElementById('info').innerText = `${km} km · ~${mins} min`;
+  const mins = Math.round(route.duration / 60);
+const miles = (route.distance / 1609.344).toFixed(1); // Convert meters to miles
+document.getElementById('info').innerText = `${miles} mi · ~${mins} min`;
   })
   .catch(err => {
     document.getElementById('info').innerText = 'Could not load route.';
